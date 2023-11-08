@@ -19,6 +19,18 @@ class Transaction(object):
     def total_changes(self):
         return sum([len(statement.changes) for statement in self.statements])
 
+class Statement(object):
+    def __init__(self, changes=None):
+        self.changes = changes or []
+
+
+class Change(object):
+    def __init__(self, command_type='', table='', actual_command='', where_parameters=None, set_parameters=None):
+        self.command_type = command_type
+        self.table = table
+        self.actual_command = actual_command
+        self.where_parameters = where_parameters or {}
+        self.set_parameters = set_parameters or {}
 
 class BinlogParser(object):
     def __init__(self, column_mapping=None):
@@ -81,3 +93,18 @@ class BinlogParser(object):
     def _extract_table(self, change_instruction_without_comments): #change_instruction_without_comments is the syntax embedded in the queries wihtout spl characters
         table_name = re.findall("`.*?`\s", change_instruction_without_comments)[0]#takes the first word (delete/insert/commit)
         return table_name.strip()
+    
+    def _extract_parameter(self, command_type, change_instruction, column_mapping):#extracting parameter
+        first_group, second_group = {}, {}
+        all_raw_parameters = re.findall("@\d=.*?\s", change_instruction)#anything immediately after @ symbol or digit is taken as parameter
+
+
+    
+def parse_to_number_if_possible(parameter):
+    try:
+        return Decimal(parameter)
+    except InvalidOperation:
+        try:
+            return float(parameter)
+        except ValueError:
+            return parameter
